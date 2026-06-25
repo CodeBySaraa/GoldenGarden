@@ -1,0 +1,21 @@
+Copyright (c) 2026 Sara Neis Goyanes Pombo
+
+All Rights Reserved.
+
+This software, including its source code, artwork, audio, and other assets, is the intellectual property of the author.
+
+You may not:
+- Redistribute this software or its assets.
+- Modify and redistribute this software.
+- Use any assets from this project in another project.
+- Sell or commercially exploit this software or its assets.
+
+PERMITTED USE
+
+You may:
+- Download and play the game.
+- View the source code for educational purposes.
+- Create videos, screenshots, livestreams, reviews, and other content featuring the game.
+- Share screenshots and gameplay footage, provided appropriate credit is given to the author.
+
+The software and assets are provided "as is", without warranty of any kind.
