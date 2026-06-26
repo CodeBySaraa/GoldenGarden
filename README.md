@@ -38,4 +38,5 @@ A relaxing gardening game made with Python and Pygame.
 	- NPC quests
 
 Enjoy the game!
+
 Golden Garden v1.0 | Made with <3 by Saraa_
