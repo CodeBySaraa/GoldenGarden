@@ -371,6 +371,16 @@ plant_images = {
         ]
     }
 }
+
+#PNG buyables
+shovel_image = pygame.image.load(
+    os.path.join(ASSETS_DIR, "buyables", "objects","shovel.png")
+).convert_alpha()
+shovel_image = pygame.transform.scale(
+    shovel_image,
+    (40, 40)
+)
+
 # Background music
 pygame.mixer.music.load(
     os.path.join(ASSETS_DIR, "sounds", "background_music.ogg")
@@ -392,10 +402,14 @@ harvest_sound = pygame.mixer.Sound(
 plant_sound = pygame.mixer.Sound(
     os.path.join(ASSETS_DIR, "sounds", "plant.ogg")
 )
+shovel_sound = pygame.mixer.Sound(
+    os.path.join(ASSETS_DIR, "sounds", "shovel.ogg")
+)
 buy_sound.set_volume(0.5)
 earn_sound.set_volume(0.4)
 harvest_sound.set_volume(0.4)
 plant_sound.set_volume(0.4)
+shovel_sound.set_volume(0.4)
 
 #PNG BloomBit icon for UI
 bloombit_image = pygame.image.load(
@@ -511,6 +525,17 @@ show_menu_popup = False
 menu_popup_rect = pygame.Rect(250, 200, 500, 250) #Popup menu in gameplay
 yes_button = pygame.Rect(320, 360, 120, 50)
 no_button = pygame.Rect(560, 360, 120, 50)
+shovel_price = 15 #shovel price for store
+shovel_count = 0
+shovel_selected = False
+shovels = 0
+selected_tool = None #Deselects something when you select another thing
+#Shovel slot
+shovel_slot = pygame.Rect(20, 90, 70, 70)
+#Flower shovel mechanics for refund and recovery chance
+Shovel_Refund = 0.40
+Seed_recovery_chance = 0.50
+shovel_price = 15
 #---PLANT DICTIONARY---
 plants = {
 
@@ -610,12 +635,22 @@ plants = {
     }
 }
 
+#---BUYABLES DICTIONARY---
+buyables = {
+    "Shovel": {
+        "price": shovel_price,
+        "image": shovel_image
+    }
+}
+
 def save_game():
 
     save_data = {
 
         "bloombits": bloombits,
         "selected_seed": selected_seed,
+        "shovels": shovels,
+        "shovel_price": shovel_price,
 
         "slots": [],
         "tiles": []
@@ -650,6 +685,8 @@ def load_game():
 
     global bloombits
     global selected_seed
+    global shovels
+    global shovel_price
 
     try:
 
@@ -657,6 +694,8 @@ def load_game():
             save_data = json.load(file)
         bloombits = save_data["bloombits"]
         selected_seed = save_data["selected_seed"]
+        shovels = save_data.get("shovels", 0)
+        shovel_price = save_data.get("shovel_price", 15)
 
 
         # Load slots
@@ -777,22 +816,66 @@ while running:
                 if store_open:
                     for button in store_buttons:
                         if button["rect"].collidepoint(mouse_pos):
-                            plant_name = button["plant"]
-                            if bloombits >= plants[plant_name]["buy_price"]:
-                                if add_seed_to_inventory(plant_name):
-                                    bloombits -= plants[plant_name]["buy_price"]
+                            item = button["plant"]
+                            if item == "Shovel":
+                                if bloombits >= shovel_price:
+                                    bloombits -= shovel_price
+                                    shovels += 1
+                                    shovel_price += 5
                                     buy_sound.play()
+                            else:
+                                if bloombits >= plants[item]["buy_price"]:
+                                    if add_seed_to_inventory(item):
+                                        bloombits -= plants[item]["buy_price"]
+                                        buy_sound.play()
                 else:
                     # SLOT CLICKING
                     for slot in slots:
                         if slot["rect"].collidepoint(mouse_pos):
                             for other_slot in slots:
                                 other_slot["selected"] = False
+                            selected_tool = None
                             slot["selected"] = True
                             selected_seed = slot["seed"]
+                            shovel_selected = False
                     # TILE INTERACTION
                     for tile in tiles:
                         if tile["rect"].collidepoint(mouse_pos):
+                            # SHOVEL
+                            if selected_tool == "shovel":
+                                if tile["planted"]:
+                                    plant_name = tile["plant"]
+                                    tile["planted"] = False
+                                    tile["plant"] = None
+                                    tile["growth_stage"] = 0
+                                    tile["plant_time"] = 0
+                                    refund = int(plants[plant_name]["buy_price"] * 0.4)
+                                    bloombits += refund
+                                    if random.random() < 0.25:
+                                        add_seed_to_inventory(plant_name)
+                                        floating_texts.append({
+                                            "text": f"+ {plant_name} Seed",
+                                            "x": tile["rect"].centerx - 50,
+                                            "y": tile["rect"].centery - 20,
+                                            "colour": (120,255,120),
+                                            "timer": 13
+                                        })
+                                    shovel_sound.play()
+                                    #Floating text for refund reward '+ x BloomBits'
+                                    floating_texts.append({
+                                        "text": f"+{refund} BloomBits",
+                                        "x": tile["rect"].centerx - 50,
+                                        "y": tile["rect"].centery,
+                                        "colour": (120, 255, 120),
+                                        "timer": 13
+                                    })
+                                    if shovels > 0:
+                                        shovels -= 1
+                                    if shovels == 0:
+                                        selected_tool = None
+                                elif not tile["planted"]:
+                                    selected_tool = None
+                                break
                             # HARVEST
                             if tile["growth_stage"] == 3:
                                 harvested_plant = tile["plant"]
@@ -814,7 +897,7 @@ while running:
                                 earn_sound.play()
                             # PLANT
                             elif not tile["planted"] and not tile["special"]:
-                                if selected_seed is not None:
+                                if selected_seed is not None and selected_tool is None:
                                     for slot in slots:
                                         if slot["selected"]:
                                             if slot["amount"] > 0:
@@ -828,6 +911,21 @@ while running:
                                                     slot["seed"] = None
                                                     slot["selected"] = False
                                                     selected_seed = None
+            # SHOVEL BUTTON
+            if shovel_slot.collidepoint(mouse_pos):
+                if shovels == 0:
+                    if bloombits >= shovel_price:
+                        bloombits -= shovel_price
+                        shovels = 1
+                        buy_sound.play()
+                        shovel_price = int(shovel_price * 1.2)
+                else:
+                    if selected_tool == "shovel":
+                        selected_tool = None
+                    else: #Deselects seeds when shovel selected
+                        selected_tool = "shovel"
+                        for slot in slots:
+                            slot["selected"] = False
         # -------------------------
         # STORE SCROLL
         # -------------------------
@@ -920,6 +1018,7 @@ while running:
             
             # BloomBit icon
             screen.blit(bloombit_image, (175, 22))
+
     # Draw tiles
     for tile in tiles:
         colour = (0, 100, 0)
@@ -1031,7 +1130,66 @@ while running:
         if slot["selected"]:
             border_colour = (255, 255, 255)
         pygame.draw.rect(screen, border_colour, slot["rect"], 4)
-        
+    # ==========================
+    # SHOVEL SLOT
+    # ==========================
+    if shovel_slot.collidepoint(mouse_pos):
+        shovel_colour = (220,220,220)
+    else:
+        shovel_colour = (180,180,180)
+    pygame.draw.rect(screen, shovel_colour, shovel_slot)
+    if shovels > 0:
+        screen.blit(shovel_image, (27,100))
+    else: #If no shovels, display a plus sign to indicate purchase
+        plus_text = slot_font.render("+", True, (255,255,255))
+        screen.blit(plus_text, (47,110))
+
+    #Nº of shovels in inventory
+    shovel_text = slot_font.render(
+        f"x{max(0, shovels)}",
+        True,
+        (255,255,255)
+    )
+    #Price of shovel and colour change
+    if bloombits >= shovel_price:
+        price_colour = (33, 242, 0)      # Green
+    else:
+        price_colour = (220, 80, 80)      # Red
+
+    # Draw price
+    price_text = slot_font.render(
+        f"{shovel_price}",
+        True,
+        price_colour
+    )
+    screen.blit(price_text, (15,165))
+
+    #Draw bloombit resized
+    bloombit_small = pygame.transform.smoothscale(
+    bloombit_image.convert_alpha(),
+    (20, 20)
+    )
+
+    # BloomBit icon
+    screen.blit(
+        bloombit_small,
+        (15 + price_text.get_width() + 4, 164)
+    )
+
+    #Higlight shovel slot when selected
+    if selected_tool == "shovel":
+        pygame.draw.rect(
+            screen,
+            (220, 220, 220),
+            shovel_slot,
+            4
+        )
+
+            # Deselect every inventory slot
+        for slot in slots:
+            slot["selected"] = False
+        selected_seed = None
+      
   # Store UI Rendering Window
     if store_open:
         # Store background
@@ -1073,6 +1231,32 @@ while running:
         #Footer section store closing hint
         hint_text = font.render("Press E to close", True, (40, 40, 40))
         screen.blit(hint_text, (420, 585))
+        # -----------------------
+        # SHOVEL SHOP ITEM
+        # -----------------------
+        text = font.render(
+            f"Shovel: {shovel_price} BloomBits",
+            True,
+            (0,0,0)
+        )
+        screen.blit(text, (290, y_offset))
+        buy_button = pygame.Rect(
+            365,
+            y_offset + 40,
+            270,
+            40
+        )
+        pygame.draw.rect(screen, (160,120,60), buy_button)
+        button_text = font.render(
+            "BUY",
+            True,
+            (0,0,0)
+        )
+        screen.blit(button_text, (470, y_offset + 47))
+        store_buttons.append({
+            "rect": buy_button,
+            "plant": "Shovel"
+        })
 
     # Floating text rendering
     for text in floating_texts[:]:

@@ -1,0 +1,16 @@
+Changelog
+
+  v1.0.1 - The Gardener's Patch
+
+     >>> Added
+	- Shovel tool
+	- Refund system
+	- Chance to recover seeds
+	- Shovel sound effects
+
+     >>> Improved
+- UI for tools
+	- Save system
+
+     >>> Fixed
+	- Various inventory and floating text bugs
