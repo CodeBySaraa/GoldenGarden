@@ -1,6 +1,6 @@
-Changelog
+Changelog:
 
-  v1.0.1-pre1**
+v1.0.1-pre1
 
      >>> Added
 	- Shovel tool
@@ -15,7 +15,7 @@ Changelog
      >>> Fixed
 	- Various inventory and floating text bugs
 
-  **v1.0.1 - The Gardener's Patch**
+v1.0.1 - The Gardener's Patch
 
      >>> Added
 	- A welcome popup the very first time you open the game
