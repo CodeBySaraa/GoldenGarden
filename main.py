@@ -536,6 +536,9 @@ shovel_slot = pygame.Rect(20, 90, 70, 70)
 Shovel_Refund = 0.40
 Seed_recovery_chance = 0.50
 shovel_price = 15
+show_welcome_popup = False #Welcome message first time you open the game
+first_launch = True #See if its the first time
+welcome_alpha = 0 #Just does a fade-in for the welcome popup
 #---PLANT DICTIONARY---
 plants = {
 
@@ -596,8 +599,8 @@ plants = {
     "Blue Orchid": {
         "buy_price": 150,
         "sell_price": 220,
-        "grow_stage_2": 14000,
-        "grow_stage_3": 25000,
+        "grow_stage_2": 22000,
+        "grow_stage_3": 40000,
         "slot_colour": (220, 20, 60),
         "stage_1_colour": (150, 0, 30),
         "stage_2_colour": (220, 20, 60),
@@ -606,8 +609,8 @@ plants = {
     "Cherry Blossom": {
         "buy_price": 350,
         "sell_price": 500,
-        "grow_stage_2": 14000,
-        "grow_stage_3": 25000,
+        "grow_stage_2": 27000,
+        "grow_stage_3": 47000,
         "slot_colour": (220, 20, 60),
         "stage_1_colour": (150, 0, 30),
         "stage_2_colour": (220, 20, 60),
@@ -616,8 +619,8 @@ plants = {
     "Golden Lily": {
         "buy_price": 900,
         "sell_price": 1400,
-        "grow_stage_2": 14000,
-        "grow_stage_3": 25000,
+        "grow_stage_2": 34000,
+        "grow_stage_3": 52000,
         "slot_colour": (220, 20, 60),
         "stage_1_colour": (150, 0, 30),
         "stage_2_colour": (220, 20, 60),
@@ -626,8 +629,8 @@ plants = {
     "Moon Blossom": {
         "buy_price": 2500,
         "sell_price": 4000,
-        "grow_stage_2": 14000,
-        "grow_stage_3": 25000,
+        "grow_stage_2": 38000,
+        "grow_stage_3": 60000,
         "slot_colour": (220, 20, 60),
         "stage_1_colour": (150, 0, 30),
         "stage_2_colour": (220, 20, 60),
@@ -651,6 +654,7 @@ def save_game():
         "selected_seed": selected_seed,
         "shovels": shovels,
         "shovel_price": shovel_price,
+        "first_launch": first_launch,
 
         "slots": [],
         "tiles": []
@@ -687,6 +691,7 @@ def load_game():
     global selected_seed
     global shovels
     global shovel_price
+    global first_launch
 
     try:
 
@@ -696,7 +701,7 @@ def load_game():
         selected_seed = save_data["selected_seed"]
         shovels = save_data.get("shovels", 0)
         shovel_price = save_data.get("shovel_price", 15)
-
+        first_launch = save_data.get("first_launch", True)
 
         # Load slots
         for i in range(len(slots)):
@@ -714,6 +719,9 @@ def load_game():
             tiles[i]["plant_time"] = pygame.time.get_ticks()
     except:
         print("No save file found")
+        shovels = 0
+        shovel_price = 15
+        selected_tool = None
         slots[0]["selected"] = True
         add_seed_to_inventory("Daisy")
         selected_seed = "Daisy"
@@ -764,6 +772,18 @@ while running:
         # -------------------------
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
+
+            # =========================
+            # WELCOME POPUP
+            # =========================
+            if show_welcome_popup:
+                if welcome_button.collidepoint(mouse_pos):
+                    show_welcome_popup = False
+                    first_launch = False
+                    welcome_alpha = 0
+                    save_game()
+
+                continue
             # =========================
             # MENU
             # =========================
@@ -787,6 +807,10 @@ while running:
                     game_state = "playing"
                     #RESET BLOOMBITS
                     bloombits = 0
+                    # RESET SHOVEL DATA
+                    shovels = 0
+                    shovel_price = 15
+                    selected_tool = None
 
                 # CONTINUE
                 elif continue_button.collidepoint(mouse_pos):
@@ -1277,9 +1301,12 @@ while running:
         if text["timer"] <= 0:
             floating_texts.remove(text)
     
-    # =========================
-    # MENU POPUP DRAWING
-    # =========================
+    #First launch welcome popup
+    if first_launch:
+        show_welcome_popup = True
+    # ================================
+    #  RETURN TO MENU POPUP DRAWING
+    # ================================
 
     if show_menu_popup:
         # Dark transparent overlay
@@ -1328,6 +1355,73 @@ while running:
         credits_text,
         credits_rect
     )
+
+    # =========================
+    # WELCOME POPUP
+    # =========================
+    if show_welcome_popup:
+        # Dark background
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.set_alpha(min(welcome_alpha, 140)) #Makes the overlay fade happen
+        overlay.fill((0, 0, 0))
+        screen.blit(overlay, (0, 0))
+        # Popup box
+        popup_rect = pygame.Rect(225, 190, 540, 300)
+        if welcome_alpha < 255:
+            welcome_alpha += 12 #Makes the box fade happen
+        #The actual box fade
+        popup_surface = pygame.Surface((540,300), pygame.SRCALPHA)
+        popup_surface.set_alpha(welcome_alpha)
+        pygame.draw.rect(
+            popup_surface,
+            (240,230,190),
+            (0,0,540,300)
+        )
+        pygame.draw.rect(
+            popup_surface,
+            (120,90,40),
+            (0,0,540,300),
+            5
+        )
+
+        title = font.render("Welcome to Golden Garden!", True, (0,0,0))
+        popup_surface.blit(title, (85,30))
+        line1 = slot_font.render(
+            "Thank you for downloading the game!",
+            True,
+            (0,0,0)
+        )
+        popup_surface.blit(line1, (95,80))
+        line2 = slot_font.render(
+            "I hope you enjoy growing your garden.",
+            True,
+            (0,0,0)
+        )
+        popup_surface.blit(line2, (92,109))
+        line3 = slot_font.render(
+            "Happy Gardening!",
+            True,
+            (0,0,0)
+        )
+        popup_surface.blit(line3, (174,170))
+        # Button of 'start playing'
+        welcome_button = pygame.Rect(370, 400, 240, 50) #330, 345, 240, 50
+        pygame.draw.rect(
+            popup_surface,
+            (90,170,90),
+            (145,210,240,50)
+        )
+        pygame.draw.rect(
+            popup_surface,
+            (40,90,40),
+            (145,210,240,50),
+            3
+        )
+        button_text = slot_font.render("Start Playing", True, (255,255,255))
+        popup_surface.blit(button_text, (200,225))
+
+        screen.blit(popup_surface, popup_rect.topleft)
+
     pygame.display.flip()
     clock.tick(60)
 pygame.quit()
