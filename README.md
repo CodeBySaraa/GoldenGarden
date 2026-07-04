@@ -39,4 +39,4 @@ A relaxing gardening game made with Python and Pygame.
 
 Enjoy the game!
 
-Golden Garden v1.0 | Made with <3 by Saraa_
+Golden Garden v1.0.1 | Made with <3 by Saraa_

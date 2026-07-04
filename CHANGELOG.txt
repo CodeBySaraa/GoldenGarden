@@ -1,6 +1,6 @@
-Changelog
+Changelog:
 
-  v1.0.1 - The Gardener's Patch
+v1.0.1-pre1
 
      >>> Added
 	- Shovel tool
@@ -9,8 +9,20 @@ Changelog
 	- Shovel sound effects
 
      >>> Improved
-- UI for tools
+    - UI for tools
 	- Save system
 
      >>> Fixed
 	- Various inventory and floating text bugs
+
+v1.0.1 - The Gardener's Patch
+
+     >>> Added
+	- A welcome popup the very first time you open the game
+    - Added a nice fade-in to the welcome popup
+
+     >>> Improved
+    - Overall game UI
+
+     >>> Fixed
+    - Some shovel bugs
