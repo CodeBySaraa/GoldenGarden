@@ -1,0 +1,66 @@
+name: Build Golden Garden
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - run: pyinstaller main.spec
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldenGarden_Windows
+          path: dist/
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - run: pyinstaller main.spec
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldenGarden_Linux
+          path: dist/
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - run: pyinstaller main.spec
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldenGarden_macOS
+          path: dist/
