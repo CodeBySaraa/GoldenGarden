@@ -7,6 +7,9 @@ import os
 pygame.init()
 pygame.mixer.init()
 
+#Hide Windows cursor
+pygame.mouse.set_visible(False)
+
 #File creater (adapter for any OS)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
@@ -15,6 +18,8 @@ ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 WIDTH, HEIGHT = 1000, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Golden Garden")
+icon = pygame.image.load("GoldenGarden-main/assets/icons/icon.png").convert_alpha()
+pygame.display.set_icon(icon) #Change pygame icon for flower icon
 clock = pygame.time.Clock()
 running = True
 font = pygame.font.SysFont(None, 40)
@@ -381,11 +386,15 @@ shovel_image = pygame.transform.scale(
     (40, 40)
 )
 
+#PNG custom cursor
+cursor_normal = pygame.image.load("GoldenGarden-main/assets/cursors/cursor_normal.png").convert_alpha()
+cursor_hand = pygame.image.load("GoldenGarden-main/assets/cursors/cursor_hand.png").convert_alpha()
+
 # Background music
 pygame.mixer.music.load(
     os.path.join(ASSETS_DIR, "sounds", "background_music.ogg")
 )
-pygame.mixer.music.set_volume(0.4)  # Volume from 0.0 to 1.0
+pygame.mixer.music.set_volume(0.0)  # Volume from 0.0 to 1.0 ########################3
 pygame.mixer.music.play(-1)  # -1 = infinite loop
 
 # Sound effects
@@ -487,9 +496,7 @@ def add_seed_to_inventory(seed_name):
 
     # Then search for empty slot
     for slot in slots:
-
         if slot["seed"] is None:
-
             slot["seed"] = seed_name
             slot["amount"] = 1
             return True
@@ -504,8 +511,10 @@ def add_seed_to_inventory(seed_name):
         "timer": 20
     })
     return False
-
-# Daisy seed placing (first slot) and overall stuff
+#=====================
+# Overall variables
+#=====================
+# Daisy seed placing (first slot) and
 slots[0]["selected"] = True
 add_seed_to_inventory("Daisy")
 selected_seed = "Daisy"
@@ -731,7 +740,11 @@ def load_game():
 load_game()
 while running:
     current_time = pygame.time.get_ticks()
-        # WATER ANIMATION
+    #Custom cursor handling (makes the normal one standard)
+    mouse_pos = pygame.mouse.get_pos()
+    hovering_clickable = False
+    current_cursor = cursor_normal
+    # WATER ANIMATION
     if current_time - last_water_update > water_animation_speed:
         water_frame_index += 1
 
@@ -772,12 +785,12 @@ while running:
         # -------------------------
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-
             # =========================
             # WELCOME POPUP
             # =========================
             if show_welcome_popup:
                 if welcome_button.collidepoint(mouse_pos):
+                    hovering_clickable = True
                     show_welcome_popup = False
                     first_launch = False
                     welcome_alpha = 0
@@ -789,7 +802,7 @@ while running:
             # =========================
             if game_state == "menu":
                 # START/NEW GAME BUTTON
-                if start_button.collidepoint(mouse_pos): 
+                if start_button.collidepoint(mouse_pos):
                     # RESET TILES
                     for tile in tiles:
                         tile["plant"] = None
@@ -816,7 +829,7 @@ while running:
                 elif continue_button.collidepoint(mouse_pos):
                     load_game()
                     game_state = "playing"
-                
+
                 # EXIT BUTTON
                 elif exit_button.collidepoint(mouse_pos):
                     pygame.quit()
@@ -984,6 +997,8 @@ while running:
         pygame.draw.rect(screen, (220, 220, 220), start_button)
         pygame.draw.rect(screen, (220, 220, 220), continue_button)
         pygame.draw.rect(screen, (220, 220, 220), exit_button)
+        if start_button.collidepoint(mouse_pos) or continue_button.collidepoint(mouse_pos) or exit_button.collidepoint(mouse_pos): #Makes cursor change to hand when hovering over buttons
+            hovering_clickable = True
         #Button text rendering        
         start_text = button_font.render(
             "Start New Game",
@@ -1000,7 +1015,7 @@ while running:
             True,
             (0, 0, 0)
         )
-        screen.blit(#Makes it be centered on the button
+        screen.blit(        #Makes it be centered on the button
             start_text,
             start_text.get_rect(center=start_button.center)
         )
@@ -1015,7 +1030,7 @@ while running:
         # CREDITS
         credits_font = pygame.font.SysFont(None, 20)
         credits_text = credits_font.render(
-            "Golden Garden v1.0 | Made with <3 by Saraa_",
+            "Golden Garden v1.0.2-alpha | Made with <3 by Saraa_",
             True,
             (255,255,255)
         )
@@ -1025,337 +1040,332 @@ while running:
                 center=(WIDTH // 2, HEIGHT - 15)
             )
         )
-        pygame.display.flip()
-        clock.tick(60)
-        continue
-    
+    elif game_state == "playing":
     # Draw background tiles
-    for bg_tile in background_map:
-            screen.blit(bg_tile["image"], bg_tile["rect"])
-            
-            # BloomBits display background
-            ui_rect = pygame.Rect(20, 20, 220, 60)
-            pygame.draw.rect(screen, (50, 50, 50), ui_rect)
-            pygame.draw.rect(screen, (255, 255, 255), ui_rect, 3)
-            money_text = font.render(str(bloombits), True, (255, 255, 255))
-            screen.blit(money_text, (35, 32))
-            
-            # BloomBit icon
-            screen.blit(bloombit_image, (175, 22))
+        for bg_tile in background_map:
+                screen.blit(bg_tile["image"], bg_tile["rect"])
+                
+                # BloomBits display background
+                ui_rect = pygame.Rect(20, 20, 220, 60)
+                pygame.draw.rect(screen, (50, 50, 50), ui_rect)
+                pygame.draw.rect(screen, (255, 255, 255), ui_rect, 3)
+                money_text = font.render(str(bloombits), True, (255, 255, 255))
+                screen.blit(money_text, (35, 32))
+                
+                # BloomBit icon
+                screen.blit(bloombit_image, (175, 22))
 
-    # Draw tiles
-    for tile in tiles:
-        colour = (0, 100, 0)
-        if tile["boosted"]:
-            colour = (85, 107, 47)
-        if tile["special"]: #Boosted tile rendering
-            screen.blit(water_frames[water_frame_index], tile["rect"])
-        elif tile["boosted"]:
-            screen.blit(tile["boosted_image"], tile["rect"])
-        else:
-            screen.blit(tile["grass_image"], tile["rect"])
-        pygame.draw.rect(screen, (0, 0, 0), tile["rect"], 1)
-        tile["boosted"] = False
-        if tile["plant"] is not None:
-            plant_image = plant_images[tile["plant"]][tile["growth_stage"]][plant_animation_frame]
-            screen.blit(
-                plant_image,
-                (tile["rect"].x + 5, tile["rect"].y + 5)
-            )
-            plant_data = plants[tile["plant"]]
-            plant_colour = plant_data["stage_1_colour"]
-            if tile["growth_stage"] == 2:
-                plant_colour = plant_data["stage_2_colour"]
-            elif tile["growth_stage"] == 3:
-                plant_colour = plant_data["stage_3_colour"]
-            # Define plant rect inside the tile before drawing
-            plant_rect = pygame.Rect(
-                tile["rect"].x + 5,
-                tile["rect"].y + 5,
-                tile_size - 10,
-                tile_size - 10,
-            )
-
-        corner_positions = [
-            (garden_rect.left, garden_rect.top),
-            (garden_rect.right - tile_size, garden_rect.top),
-            (garden_rect.left, garden_rect.bottom - tile_size),
-            (garden_rect.right - tile_size, garden_rect.bottom - tile_size)
-        ]
-
+        # Draw tiles
         for tile in tiles:
-            if tile["rect"].topleft in corner_positions:
-                tile["special"] = True
-        
-        #Boosted tiles setup (around water tiles)
-        boost_positions = []
-
-        # Top-left corner
-        boost_positions.extend([
-            (garden_rect.left + tile_size, garden_rect.top),
-            (garden_rect.left, garden_rect.top + tile_size),
-            (garden_rect.left + tile_size, garden_rect.top + tile_size)
-        ])
-
-        # Top-right corner
-        boost_positions.extend([
-            (garden_rect.right - tile_size * 2, garden_rect.top),
-            (garden_rect.right - tile_size, garden_rect.top + tile_size),
-            (garden_rect.right - tile_size * 2, garden_rect.top + tile_size)
-        ])
-
-        # Bottom-left corner
-        boost_positions.extend([
-            (garden_rect.left + tile_size, garden_rect.bottom - tile_size),
-            (garden_rect.left, garden_rect.bottom - tile_size * 2),
-            (garden_rect.left + tile_size, garden_rect.bottom - tile_size * 2)
-        ])
-
-        # Bottom-right corner
-        boost_positions.extend([
-            (garden_rect.right - tile_size * 2, garden_rect.bottom - tile_size),
-            (garden_rect.right - tile_size, garden_rect.bottom - tile_size * 2),
-            (garden_rect.right - tile_size * 2, garden_rect.bottom - tile_size * 2)
-        ])
-
-        for tile in tiles:
-            if tile["rect"].topleft in boost_positions:
-                tile["boosted"] = True
-        
-    # Fence
-    pygame.draw.rect(screen, (139, 69, 19), garden_rect, 6)
-    
-    # Slots UI
-    for slot in slots:
-        colour = (180, 180, 180)
-        if slot["selected"]:
-            colour = (220, 220, 220)
-        pygame.draw.rect(screen, colour, slot["rect"])
-        
-        # Seed placeholder and stack amount rendering
-        if slot["amount"] > 0:
-            if slot["amount"] > 0:
-                seed_image = plant_images[slot["seed"]]["slot"]
+            colour = (0, 100, 0)
+            if tile["boosted"]:
+                colour = (85, 107, 47)
+            if tile["special"]: #Boosted tile rendering
+                screen.blit(water_frames[water_frame_index], tile["rect"])
+            elif tile["boosted"]:
+                screen.blit(tile["boosted_image"], tile["rect"])
+            else:
+                screen.blit(tile["grass_image"], tile["rect"])
+            pygame.draw.rect(screen, (0, 0, 0), tile["rect"], 1)
+            tile["boosted"] = False
+            if tile["plant"] is not None:
+                plant_image = plant_images[tile["plant"]][tile["growth_stage"]][plant_animation_frame]
                 screen.blit(
-                    seed_image,
-                    (slot["rect"].x + 10, slot["rect"].y + 10)
+                    plant_image,
+                    (tile["rect"].x + 5, tile["rect"].y + 5)
                 )
-                amount_text = slot_font.render(str(slot["amount"]), True, (0, 0, 0))
-                screen.blit(
-                    amount_text,
-                    (slot["rect"].x + 5, slot["rect"].y + 45)
+                plant_data = plants[tile["plant"]]
+                plant_colour = plant_data["stage_1_colour"]
+                if tile["growth_stage"] == 2:
+                    plant_colour = plant_data["stage_2_colour"]
+                elif tile["growth_stage"] == 3:
+                    plant_colour = plant_data["stage_3_colour"]
+                # Define plant rect inside the tile before drawing
+                plant_rect = pygame.Rect(
+                    tile["rect"].x + 5,
+                    tile["rect"].y + 5,
+                    tile_size - 10,
+                    tile_size - 10,
                 )
-            #Stack quantity on top of slot graphics
-            amount_text = slot_font.render(str(slot["amount"]), True, (0, 0, 0))
-            screen.blit(amount_text, (slot["rect"].x + 5, slot["rect"].y + 45))
+
+            corner_positions = [
+                (garden_rect.left, garden_rect.top),
+                (garden_rect.right - tile_size, garden_rect.top),
+                (garden_rect.left, garden_rect.bottom - tile_size),
+                (garden_rect.right - tile_size, garden_rect.bottom - tile_size)
+            ]
+
+            for tile in tiles:
+                if tile["rect"].topleft in corner_positions:
+                    tile["special"] = True
             
-        # Border
-        border_colour = (50, 50, 50)
-        if slot["selected"]:
-            border_colour = (255, 255, 255)
-        pygame.draw.rect(screen, border_colour, slot["rect"], 4)
-    # ==========================
-    # SHOVEL SLOT
-    # ==========================
-    if shovel_slot.collidepoint(mouse_pos):
-        shovel_colour = (220,220,220)
-    else:
-        shovel_colour = (180,180,180)
-    pygame.draw.rect(screen, shovel_colour, shovel_slot)
-    if shovels > 0:
-        screen.blit(shovel_image, (27,100))
-    else: #If no shovels, display a plus sign to indicate purchase
-        plus_text = slot_font.render("+", True, (255,255,255))
-        screen.blit(plus_text, (47,110))
+            #Boosted tiles setup (around water tiles)
+            boost_positions = []
 
-    #Nº of shovels in inventory
-    shovel_text = slot_font.render(
-        f"x{max(0, shovels)}",
-        True,
-        (255,255,255)
-    )
-    #Price of shovel and colour change
-    if bloombits >= shovel_price:
-        price_colour = (33, 242, 0)      # Green
-    else:
-        price_colour = (220, 80, 80)      # Red
+            # Top-left corner
+            boost_positions.extend([
+                (garden_rect.left + tile_size, garden_rect.top),
+                (garden_rect.left, garden_rect.top + tile_size),
+                (garden_rect.left + tile_size, garden_rect.top + tile_size)
+            ])
 
-    # Draw price
-    price_text = slot_font.render(
-        f"{shovel_price}",
-        True,
-        price_colour
-    )
-    screen.blit(price_text, (15,165))
+            # Top-right corner
+            boost_positions.extend([
+                (garden_rect.right - tile_size * 2, garden_rect.top),
+                (garden_rect.right - tile_size, garden_rect.top + tile_size),
+                (garden_rect.right - tile_size * 2, garden_rect.top + tile_size)
+            ])
 
-    #Draw bloombit resized
-    bloombit_small = pygame.transform.smoothscale(
-    bloombit_image.convert_alpha(),
-    (20, 20)
-    )
+            # Bottom-left corner
+            boost_positions.extend([
+                (garden_rect.left + tile_size, garden_rect.bottom - tile_size),
+                (garden_rect.left, garden_rect.bottom - tile_size * 2),
+                (garden_rect.left + tile_size, garden_rect.bottom - tile_size * 2)
+            ])
 
-    # BloomBit icon
-    screen.blit(
-        bloombit_small,
-        (15 + price_text.get_width() + 4, 164)
-    )
+            # Bottom-right corner
+            boost_positions.extend([
+                (garden_rect.right - tile_size * 2, garden_rect.bottom - tile_size),
+                (garden_rect.right - tile_size, garden_rect.bottom - tile_size * 2),
+                (garden_rect.right - tile_size * 2, garden_rect.bottom - tile_size * 2)
+            ])
 
-    #Higlight shovel slot when selected
-    if selected_tool == "shovel":
-        pygame.draw.rect(
-            screen,
-            (220, 220, 220),
-            shovel_slot,
-            4
-        )
-
-            # Deselect every inventory slot
+            for tile in tiles:
+                if tile["rect"].topleft in boost_positions:
+                    tile["boosted"] = True
+            
+        # Fence
+        pygame.draw.rect(screen, (139, 69, 19), garden_rect, 6)
+        
+        # Slots UI
         for slot in slots:
-            slot["selected"] = False
-        selected_seed = None
-      
-  # Store UI Rendering Window
-    if store_open:
-        # Store background
-        store_rect = pygame.Rect(250, 80, 500, 550)
-        pygame.draw.rect(screen, (220, 190, 120), store_rect)
-        pygame.draw.rect(screen, (80, 60, 20), store_rect, 5)
-        # Store title
-        title_text = font.render("Seed Store", True, (0, 0, 0))
-        screen.blit(title_text, (410, 100))
+            colour = (180, 180, 180)
+            if slot["selected"]:
+                colour = (220, 220, 220)
+            if slot["rect"].collidepoint(mouse_pos): #Slot highlight when hovered over and cursor to hand
+                hovering_clickable = True
+                colour = (220, 220, 220)
+            pygame.draw.rect(screen, colour, slot["rect"])
+            
+            # Seed placeholder and stack amount rendering
+            if slot["amount"] > 0:
+                if slot["amount"] > 0:
+                    seed_image = plant_images[slot["seed"]]["slot"]
+                    screen.blit(
+                        seed_image,
+                        (slot["rect"].x + 10, slot["rect"].y + 10)
+                    )
+                    amount_text = slot_font.render(str(slot["amount"]), True, (0, 0, 0))
+                    screen.blit(
+                        amount_text,
+                        (slot["rect"].x + 5, slot["rect"].y + 45)
+                    )
+                #Stack quantity on top of slot graphics
+                amount_text = slot_font.render(str(slot["amount"]), True, (0, 0, 0))
+                screen.blit(amount_text, (slot["rect"].x + 5, slot["rect"].y + 45))
+                
+            # Border
+            border_colour = (50, 50, 50)
+            if slot["selected"]:
+                border_colour = (255, 255, 255)
+            pygame.draw.rect(screen, border_colour, slot["rect"], 4)
+        # ==========================
+        # SHOVEL SLOT
+        # ==========================
+        if shovel_slot.collidepoint(mouse_pos):
+            hovering_clickable = True
+            shovel_colour = (220,220,220)
+        else:
+            shovel_colour = (180,180,180)
+        pygame.draw.rect(screen, shovel_colour, shovel_slot)
+        if shovels > 0:
+            screen.blit(shovel_image, (27,100))
+        else: #If no shovels, display a plus sign to indicate purchase
+            plus_text = slot_font.render("+", True, (255,255,255))
+            screen.blit(plus_text, (47,110))
 
-        # Store scrolling plants
-        y_offset = 160 - store_scroll
-        store_buttons = []
-        for plant_name, plant_data in plants.items():
-            # Only draw visible items
-            if y_offset > 120 and y_offset < 560:
-                # Plant text
-                text = font.render(
-                    f"{plant_name}: {plant_data['buy_price']} BloomBits",
-                    True,
-                    (0, 0, 0)
-                )
-                screen.blit(text, (290, y_offset))
-                # Buy button
-                buy_button = pygame.Rect(365, y_offset + 40, 270, 40)
-                pygame.draw.rect(
-                    screen,
-                    plant_data["slot_colour"],
-                    buy_button
-                )
-                button_text = font.render("BUY", True, (0, 0, 0))
-                screen.blit(button_text, (470, y_offset + 47))
-                # Save button info
-                store_buttons.append({
-                    "rect": buy_button,
-                    "plant": plant_name
-                })
-            y_offset += 110
-        #Footer section store closing hint
-        hint_text = font.render("Press E to close", True, (40, 40, 40))
-        screen.blit(hint_text, (420, 585))
-        # -----------------------
-        # SHOVEL SHOP ITEM
-        # -----------------------
-        text = font.render(
-            f"Shovel: {shovel_price} BloomBits",
+        #Nº of shovels in inventory
+        shovel_text = slot_font.render(
+            f"x{max(0, shovels)}",
             True,
-            (0,0,0)
+            (255,255,255)
         )
-        screen.blit(text, (290, y_offset))
-        buy_button = pygame.Rect(
-            365,
-            y_offset + 40,
-            270,
-            40
-        )
-        pygame.draw.rect(screen, (160,120,60), buy_button)
-        button_text = font.render(
-            "BUY",
-            True,
-            (0,0,0)
-        )
-        screen.blit(button_text, (470, y_offset + 47))
-        store_buttons.append({
-            "rect": buy_button,
-            "plant": "Shovel"
-        })
+        #Price of shovel and colour change
+        if bloombits >= shovel_price:
+            price_colour = (33, 242, 0)      # Green
+        else:
+            price_colour = (220, 80, 80)     # Red
 
-    # Floating text rendering
-    for text in floating_texts[:]:
-        text_surface = floating_font.render(
-            text["text"],
+        # Draw price
+        price_text = slot_font.render(
+            f"{shovel_price}",
             True,
-            text["colour"]
+            price_colour
+        )
+        screen.blit(price_text, (15,165))
+
+        #Draw bloombit resized
+        bloombit_small = pygame.transform.smoothscale(
+        bloombit_image.convert_alpha(),
+        (20, 20)
+        )
+        # BloomBit icon
+        screen.blit(
+            bloombit_small,
+            (15 + price_text.get_width() + 4, 164)
+        )
+        #Higlight shovel slot when selected
+        if selected_tool == "shovel":
+            if current_cursor == cursor_normal: 
+                hovering_clickable = True
+            pygame.draw.rect(
+                screen,
+                (220, 220, 220),
+                shovel_slot,
+                4
+            )
+                # Deselect every inventory slot
+            for slot in slots:
+                slot["selected"] = False
+            selected_seed = None
+
+        # Credits text
+        credits_font = pygame.font.SysFont(None, 20)
+        credits_text = credits_font.render(
+            "Made with <3 by Saraa_",
+            True,
+            (255, 255, 255)
+        )
+        credits_rect = credits_text.get_rect(
+            center=(WIDTH // 2, HEIGHT - 15)
         )
         screen.blit(
-            text_surface,
-            (text["x"], text["y"])
+            credits_text,
+            credits_rect
         )
-        # Move upward slowly
-        text["y"] -= 0.5
-        # Reduce timer
-        text["timer"] -= 1
-        # Delete expired text
-        if text["timer"] <= 0:
-            floating_texts.remove(text)
-    
-    #First launch welcome popup
-    if first_launch:
-        show_welcome_popup = True
-    # ================================
-    #  RETURN TO MENU POPUP DRAWING
-    # ================================
+        # Store UI Rendering Window
+        if store_open:
+            # Store background
+            store_rect = pygame.Rect(250, 80, 500, 550)
+            pygame.draw.rect(screen, (220, 190, 120), store_rect)
+            pygame.draw.rect(screen, (80, 60, 20), store_rect, 5)
+            # Store title
+            title_text = font.render("Seed Store", True, (0, 0, 0))
+            screen.blit(title_text, (410, 100))
 
-    if show_menu_popup:
-        # Dark transparent overlay
-        overlay = pygame.Surface((WIDTH, HEIGHT))
-        overlay.set_alpha(120)
-        overlay.fill((0, 0, 0))
-        screen.blit(overlay, (0, 0))
-        # Popup background
-        pygame.draw.rect(screen, (230, 230, 230), menu_popup_rect)
-        pygame.draw.rect(screen, (40, 40, 40), menu_popup_rect, 5)
-        # Text
-        popup_text = font.render(
-            "Return to main menu?",
-            True,
-            (0, 0, 0)
-        )
-        screen.blit(
-            popup_text,
-            popup_text.get_rect(center=(500, 260))
-        )
-        # YES button
-        pygame.draw.rect(screen, (80, 180, 80), yes_button)
-        yes_text = font.render("YES", True, (255, 255, 255))
-        screen.blit(
-            yes_text,
-            yes_text.get_rect(center=yes_button.center)
-        )
-        # NO button
-        pygame.draw.rect(screen, (180, 80, 80), no_button)
-        no_text = font.render("NO", True, (255, 255, 255))
-        screen.blit(
-            no_text,
-            no_text.get_rect(center=no_button.center)
-        )
-    # Credits text
-    credits_font = pygame.font.SysFont(None, 20)
-    credits_text = credits_font.render(
-        "Made with <3 by Saraa_",
-        True,
-        (0, 0, 0)
-    )
-    credits_rect = credits_text.get_rect(
-        center=(WIDTH // 2, HEIGHT - 15)
-    )
-    screen.blit(
-        credits_text,
-        credits_rect
-    )
+            # Store scrolling plants
+            y_offset = 160 - store_scroll
+            store_buttons = []
+            for plant_name, plant_data in plants.items():
+                # Only draw visible items
+                if y_offset > 120 and y_offset < 560:
+                    # Plant text
+                    text = font.render(
+                        f"{plant_name}: {plant_data['buy_price']} BloomBits",
+                        True,
+                        (0, 0, 0)
+                    )
+                    screen.blit(text, (290, y_offset))
+                    # Buy button
+                    buy_button = pygame.Rect(365, y_offset + 40, 270, 40)
+                    pygame.draw.rect(
+                        screen,
+                        plant_data["slot_colour"],
+                        buy_button
+                    )
+                    mouse_pos = pygame.mouse.get_pos()
+                    # Draw button
+                    pygame.draw.rect(
+                        screen,
+                        plant_data["slot_colour"],
+                        buy_button
+                    )
+                    # Border (changes colour when hovered)
+                    border_colour = (40, 90, 40)
+                    if buy_button.collidepoint(mouse_pos):
+                        hovering_clickable = True
+                        border_colour = (70, 140, 70)
+                    pygame.draw.rect(screen, border_colour, buy_button, 3)
 
+                    # Hover overlay
+                    if buy_button.collidepoint(mouse_pos):
+                        hovering_clickable = True
+                        hover = pygame.Surface((buy_button.width, buy_button.height), pygame.SRCALPHA)
+                        hover.fill((255, 255, 255, 45))
+                        screen.blit(hover, buy_button.topleft)
+
+                    # BUY text
+                    button_text = font.render("BUY", True, (0, 0, 0))
+                    screen.blit(button_text, (470, y_offset + 47))
+                    # Save button info
+                    store_buttons.append({
+                        "rect": buy_button,
+                        "plant": plant_name
+                    })
+                y_offset += 110
+            #Footer section store closing hint
+            hint_text = font.render("Press E to close", True, (40, 40, 40))
+            screen.blit(hint_text, (420, 585))
+
+        # Floating text rendering
+        for text in floating_texts[:]:
+            text_surface = floating_font.render(
+                text["text"],
+                True,
+                text["colour"]
+            )
+            screen.blit(
+                text_surface,
+                (text["x"], text["y"])
+            )
+            # Move upward slowly
+            text["y"] -= 0.5
+            # Reduce timer
+            text["timer"] -= 1
+            # Delete expired text
+            if text["timer"] <= 0:
+                floating_texts.remove(text)
+        
+        #First launch welcome popup
+        if first_launch:
+            show_welcome_popup = True
+        # ================================
+        #  RETURN TO MENU POPUP DRAWING
+        # ================================
+
+        if show_menu_popup:
+            # Dark transparent overlay
+            overlay = pygame.Surface((WIDTH, HEIGHT))
+            overlay.set_alpha(120)
+            overlay.fill((0, 0, 0))
+            screen.blit(overlay, (0, 0))
+            # Popup background
+            pygame.draw.rect(screen, (230, 230, 230), menu_popup_rect)
+            pygame.draw.rect(screen, (40, 40, 40), menu_popup_rect, 5)
+            # Text
+            popup_text = font.render(
+                "Return to main menu?",
+                True,
+                (0, 0, 0)
+            )
+            screen.blit(
+                popup_text,
+                popup_text.get_rect(center=(500, 260))
+            )
+            # YES button
+            pygame.draw.rect(screen, (80, 180, 80), yes_button)
+            yes_text = font.render("YES", True, (255, 255, 255))
+            screen.blit(
+                yes_text,
+                yes_text.get_rect(center=yes_button.center)
+            )
+            # NO button
+            pygame.draw.rect(screen, (180, 80, 80), no_button)
+            no_text = font.render("NO", True, (255, 255, 255))
+            screen.blit(
+                no_text,
+                no_text.get_rect(center=no_button.center)
+            )
     # =========================
     # WELCOME POPUP
     # =========================
@@ -1405,7 +1415,8 @@ while running:
         )
         popup_surface.blit(line3, (174,170))
         # Button of 'start playing'
-        welcome_button = pygame.Rect(370, 400, 240, 50) #330, 345, 240, 50
+        welcome_button = pygame.Rect(370, 400, 240, 50)
+        hovering_clickable = True
         pygame.draw.rect(
             popup_surface,
             (90,170,90),
@@ -1422,6 +1433,14 @@ while running:
 
         screen.blit(popup_surface, popup_rect.topleft)
 
+    # Custom cursor rendering (normal)
+    mouse_pos = pygame.mouse.get_pos()
+    if hovering_clickable:
+        current_cursor = cursor_hand
+    else:
+        current_cursor = cursor_normal
+    screen.blit(current_cursor, mouse_pos)
+
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(144)
 pygame.quit()
