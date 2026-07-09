@@ -394,7 +394,7 @@ cursor_hand = pygame.image.load("GoldenGarden-main/assets/cursors/cursor_hand.pn
 pygame.mixer.music.load(
     os.path.join(ASSETS_DIR, "sounds", "background_music.ogg")
 )
-pygame.mixer.music.set_volume(0.0)  # Volume from 0.0 to 1.0 ########################3
+pygame.mixer.music.set_volume(0.4)
 pygame.mixer.music.play(-1)  # -1 = infinite loop
 
 # Sound effects
