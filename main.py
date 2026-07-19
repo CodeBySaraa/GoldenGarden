@@ -3,9 +3,19 @@ import sys
 import json
 import random
 import os
+import platform
 
 pygame.init()
 pygame.mixer.init()
+
+#OS detection
+IS_WINDOWS = platform.system() == "Windows"
+IS_LINUX = platform.system() == "Linux"
+IS_MAC = platform.system() == "Darwin"
+#Platgorm-specific imports for Windows
+if platform.system() == "Windows":
+    import winshell
+    from win32com.client import Dispatch
 
 #Hide Windows cursor
 pygame.mouse.set_visible(False)
@@ -14,11 +24,23 @@ pygame.mouse.set_visible(False)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
+#==========================
+# Directories adapter
+#==========================
+def resource_path(relative_path):
+    if getattr(sys, "frozen", False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+#=========================
 # Window setup
+#=========================
 WIDTH, HEIGHT = 1000, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Golden Garden")
-icon = pygame.image.load("GoldenGarden-main/assets/icons/icon.png").convert_alpha()
+icon = pygame.image.load(resource_path("assets/icons/icon.png")).convert_alpha()
 pygame.display.set_icon(icon) #Change pygame icon for flower icon
 clock = pygame.time.Clock()
 running = True
@@ -30,21 +52,28 @@ slot_font = pygame.font.SysFont(None, 28)
 start_button = pygame.Rect(350, 260, 300, 70)
 continue_button = pygame.Rect(350, 360, 300, 70)
 exit_button = pygame.Rect(350, 460, 300, 70)
+#Internal version tracking constant
+GAME_VERSION = "1.0.2-beta"
+
+#Desktop shortcut creation and pointing
+if getattr(sys, "frozen", False):
+    target = sys.executable
+else:
+    target = os.path.abspath(sys.argv[0])
 
 #PNG randomisation of garden layout
- # os.path.join(ASSETS_DIR, "tiles", "water", "w1.png")
 grass_tiles = [
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_normal", "gt1.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_normal", "gt2.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_normal", "gt3.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_normal", "gt4.png"))
+    pygame.image.load(resource_path("assets/tiles/grass_normal/gt1.png")),
+    pygame.image.load(resource_path("assets/tiles/grass_normal/gt2.png")),
+    pygame.image.load(resource_path("assets/tiles/grass_normal/gt3.png")),
+    pygame.image.load(resource_path("assets/tiles/grass_normal/gt4.png"))
 ]
 
 #PNG animation for water layout
 water_frames = [
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "water", "w1.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "water", "w2.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "water", "w3.png"))
+    pygame.image.load(resource_path("assets/tiles/water/w1.png")),
+    pygame.image.load(resource_path("assets/tiles/water/w2.png")),
+    pygame.image.load(resource_path("assets/tiles/water/w3.png"))
 ]
 water_frame_index = 0
 last_water_update = 0
@@ -52,15 +81,15 @@ water_animation_speed = 500
 
 #PNG randomisation of background layout
 background_tiles = [
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "background", "bg1.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "background", "bg2.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "background", "bg3.png"))
+    pygame.image.load(resource_path("assets/tiles/background/bg1.png")),
+    pygame.image.load(resource_path("assets/tiles/background/bg2.png")),
+    pygame.image.load(resource_path("assets/tiles/background/bg3.png"))
 ]
 
 #PNG randomisation for boosted tile layout
 boosted_tiles = [
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_boosted", "gb1.png")),
-    pygame.image.load(os.path.join(ASSETS_DIR, "tiles", "grass_boosted", "gb2.png"))
+    pygame.image.load(resource_path("assets/tiles/grass_boosted/gb1.png")),
+    pygame.image.load(resource_path("assets/tiles/grass_boosted/gb2.png"))
 ]
 
 #PNG plants
@@ -68,310 +97,310 @@ plant_images = {
 
     "Daisy": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_slotview", "daisy_slotview.png")
+            resource_path("assets/plants/daisy/daisy_slotview/daisy_slotview.png")
         ).convert_alpha(),
         1: [
             pygame.image.load(
-               os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage1", "daisy-1-1.png")
+               resource_path("assets/plants/daisy/daisy_stage1/daisy-1-1.png")
             ).convert_alpha(),
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage1", "daisy-1-2.png")
+                resource_path("assets/plants/daisy/daisy_stage1/daisy-1-2.png")
             ).convert_alpha()
         ],
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage2", "daisy-2-1.png")
+                resource_path("assets/plants/daisy/daisy_stage2/daisy-2-1.png")
             ).convert_alpha(),
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage2", "daisy-2-2.png")
+                resource_path("assets/plants/daisy/daisy_stage2/daisy-2-2.png")
             ).convert_alpha()
         ],
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage3", "daisy-3-1.png")
+                resource_path("assets/plants/daisy/daisy_stage3/daisy-3-1.png")
             ).convert_alpha(),
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "daisy", "daisy_stage3", "daisy-3-2.png")
+                resource_path("assets/plants/daisy/daisy_stage3/daisy-3-2.png")
             ).convert_alpha()
         ]
     },
     "Tulip": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_slotview", "tulip_slotview.png")
+            resource_path("assets/plants/tulip/tulip_slotview/tulip_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage1", "tulip-1-1.png")
+                resource_path("assets/plants/tulip/tulip_stage1/tulip-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage1", "tulip-1-2.png")
+                resource_path("assets/plants/tulip/tulip_stage1/tulip-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage2", "tulip-2-1.png")
+                resource_path("assets/plants/tulip/tulip_stage2/tulip-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage2", "tulip-2-2.png")
+                resource_path("assets/plants/tulip/tulip_stage2/tulip-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage3", "tulip-3-1.png")
+                resource_path("assets/plants/tulip/tulip_stage3/tulip-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "tulip", "tulip_stage3", "tulip-3-2.png")
+                resource_path("assets/plants/tulip/tulip_stage3/tulip-3-2.png")
             ).convert_alpha()
         ]
     },
     "Sunflower": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_slotview", "sunflower_slotview.png")
+            resource_path("assets/plants/sunflower/sunflower_slotview/sunflower_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage1", "sunflower-1-1.png")
+                resource_path("assets/plants/sunflower/sunflower_stage1/sunflower-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage1", "sunflower-1-2.png")
+                resource_path("assets/plants/sunflower/sunflower_stage1/sunflower-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage2", "sunflower-2-1.png")
+                resource_path("assets/plants/sunflower/sunflower_stage2/sunflower-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage2", "sunflower-2-2.png")
+                resource_path("assets/plants/sunflower/sunflower_stage2/sunflower-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage3", "sunflower-3-1.png")
+                resource_path("assets/plants/sunflower/sunflower_stage3/sunflower-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "sunflower", "sunflower_stage3", "sunflower-3-2.png")
+                resource_path("assets/plants/sunflower/sunflower_stage3/sunflower-3-2.png")
             ).convert_alpha()
         ]
     },
     "Rose": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "rose", "rose_slotview", "rose_slotview.png")
+            resource_path("assets/plants/rose/rose_slotview/rose_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage1", "rose-1-1.png")
+                resource_path("assets/plants/rose/rose_stage1/rose-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage1", "rose-1-2.png")
+                resource_path("assets/plants/rose/rose_stage1/rose-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage2", "rose-2-1.png")
+                resource_path("assets/plants/rose/rose_stage2/rose-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage2", "rose-2-2.png")
+                resource_path("assets/plants/rose/rose_stage2/rose-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage3", "rose-3-1.png")
+                resource_path("assets/plants/rose/rose_stage3/rose-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "rose", "rose_stage3", "rose-3-2.png")
+                resource_path("assets/plants/rose/rose_stage3/rose-3-2.png")
             ).convert_alpha()
         ]
     },
     "Lavender": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_slotview", "lavender_slotview.png")
+            resource_path("assets/plants/lavender/lavender_slotview/lavender_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage1", "lavender-1-1.png")
+                resource_path("assets/plants/lavender/lavender_stage1/lavender-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage1", "lavender-1-2.png")
+                resource_path("assets/plants/lavender/lavender_stage1/lavender-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage2", "lavender-2-1.png")
+                resource_path("assets/plants/lavender/lavender_stage2/lavender-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage2", "lavender-2-2.png")
+                resource_path("assets/plants/lavender/lavender_stage2/lavender-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage3", "lavender-3-1.png")
+                resource_path("assets/plants/lavender/lavender_stage3/lavender-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "lavender", "lavender_stage3", "lavender-3-2.png")
+                resource_path("assets/plants/lavender/lavender_stage3/lavender-3-2.png")
             ).convert_alpha()
         ]
     },
     "Blue Orchid": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_slotview", "blueorchid_slotview.png")
+            resource_path("assets/plants/blueorchid/blueorchid_slotview/blueorchid_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage1", "blueorchid-1-1.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage1/blueorchid-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage1", "blueorchid-1-2.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage1/blueorchid-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage2", "blueorchid-2-1.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage2/blueorchid-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage2", "blueorchid-2-2.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage2/blueorchid-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage3", "blueorchid-3-1.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage3/blueorchid-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "blueorchid", "blueorchid_stage3", "blueorchid-3-2.png")
+                resource_path("assets/plants/blueorchid/blueorchid_stage3/blueorchid-3-2.png")
             ).convert_alpha()
         ]
     },
     "Cherry Blossom": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_slotview", "cherryblossom_slotview.png")
+            resource_path("assets/plants/cherryblossom/cherryblossom_slotview/cherryblossom_slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage1", "cherryblossom-1-1.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage1/cherryblossom-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage1", "cherryblossom-1-2.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage1/cherryblossom-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage2", "cherryblossom-2-1.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage2/cherryblossom-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage2", "cherryblossom-2-2.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage2/cherryblossom-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage3", "cherryblossom-3-1.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage3/cherryblossom-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "cherryblossom", "cherryblossom_stage3", "cherryblossom-3-2.png")
+                resource_path("assets/plants/cherryblossom/cherryblossom_stage3/cherryblossom-3-2.png")
             ).convert_alpha()
         ]
     },
     "Golden Lily": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_slotview", "goldenlily-slotview.png")
+            resource_path("assets/plants/goldenlily/goldenlily_slotview/goldenlily-slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage1", "goldenlily-1-1.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage1/goldenlily-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage1", "goldenlily-1-2.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage1/goldenlily-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage2", "goldenlily-2-1.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage2/goldenlily-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage2", "goldenlily-2-2.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage2/goldenlily-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage3", "goldenlily-3-1.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage3/goldenlily-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "goldenlily", "goldenlily_stage3", "goldenlily-3-2.png")
+                resource_path("assets/plants/goldenlily/goldenlily_stage3/goldenlily-3-2.png")
             ).convert_alpha()
         ]
     },
     "Moon Blossom": {
         "slot": pygame.image.load(
-            os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_slotview", "moonblossom-slotview.png")
+            resource_path("assets/plants/moonblossom/moonblossom_slotview/moonblossom-slotview.png")
         ).convert_alpha(),
 
         1: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage1", "moonblossom-1-1.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage1/moonblossom-1-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage1", "moonblossom-1-2.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage1/moonblossom-1-2.png")
             ).convert_alpha()
         ],
 
         2: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage2", "moonblossom-2-1.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage2/moonblossom-2-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage2", "moonblossom-2-2.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage2/moonblossom-2-2.png")
             ).convert_alpha()
         ],
 
         3: [
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage3", "moonblossom-3-1.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage3/moonblossom-3-1.png")
             ).convert_alpha(),
 
             pygame.image.load(
-                os.path.join(ASSETS_DIR, "plants", "moonblossom", "moonblossom_stage3", "moonblossom-3-2.png")
+                resource_path("assets/plants/moonblossom/moonblossom_stage3/moonblossom-3-2.png")
             ).convert_alpha()
         ]
     }
@@ -379,7 +408,7 @@ plant_images = {
 
 #PNG buyables
 shovel_image = pygame.image.load(
-    os.path.join(ASSETS_DIR, "buyables", "objects","shovel.png")
+    resource_path("assets/buyables/objects/shovel.png")
 ).convert_alpha()
 shovel_image = pygame.transform.scale(
     shovel_image,
@@ -387,32 +416,32 @@ shovel_image = pygame.transform.scale(
 )
 
 #PNG custom cursor
-cursor_normal = pygame.image.load("GoldenGarden-main/assets/cursors/cursor_normal.png").convert_alpha()
-cursor_hand = pygame.image.load("GoldenGarden-main/assets/cursors/cursor_hand.png").convert_alpha()
+cursor_normal = pygame.image.load(resource_path("assets/cursors/cursor_normal.png")).convert_alpha()
+cursor_hand = pygame.image.load(resource_path("assets/cursors/cursor_hand.png")).convert_alpha()
 
 # Background music
 pygame.mixer.music.load(
-    os.path.join(ASSETS_DIR, "sounds", "background_music.ogg")
+    resource_path("assets/sounds/background_music.ogg")
 )
 pygame.mixer.music.set_volume(0.4)
 pygame.mixer.music.play(-1)  # -1 = infinite loop
 
 # Sound effects
 buy_sound = pygame.mixer.Sound(
-    os.path.join(ASSETS_DIR, "sounds", "buy.ogg")
+    resource_path("assets/sounds/buy.ogg")
 )
 earn_sound = pygame.mixer.Sound(
-    os.path.join(ASSETS_DIR, "sounds", "earn.ogg")
+    resource_path("assets/sounds/earn.ogg")
 )
 
 harvest_sound = pygame.mixer.Sound(
-    os.path.join(ASSETS_DIR, "sounds", "harvest.ogg")
+    resource_path("assets/sounds/harvest.ogg")
 )
 plant_sound = pygame.mixer.Sound(
-    os.path.join(ASSETS_DIR, "sounds", "plant.ogg")
+    resource_path("assets/sounds/plant.ogg")
 )
 shovel_sound = pygame.mixer.Sound(
-    os.path.join(ASSETS_DIR, "sounds", "shovel.ogg")
+    resource_path("assets/sounds/shovel.ogg")
 )
 buy_sound.set_volume(0.5)
 earn_sound.set_volume(0.4)
@@ -422,7 +451,7 @@ shovel_sound.set_volume(0.4)
 
 #PNG BloomBit icon for UI
 bloombit_image = pygame.image.load(
-    os.path.join(ASSETS_DIR, "ui", "BloomBit.png")
+    resource_path("assets/ui/BloomBit.png")
 ).convert()
 bloombit_image.set_colorkey((255, 255, 255))
 bloombit_image = pygame.transform.scale(bloombit_image, (55, 55))
@@ -502,7 +531,6 @@ def add_seed_to_inventory(seed_name):
             return True
 
     # Inventory full
-    print("Inventory is full")
     floating_texts.append({
         "text": "Inventory Full!",
         "x": 400,
@@ -548,6 +576,43 @@ shovel_price = 15
 show_welcome_popup = False #Welcome message first time you open the game
 first_launch = True #See if its the first time
 welcome_alpha = 0 #Just does a fade-in for the welcome popup
+show_desktop_shortcut_prompt = False #Detects first launch and prompts to create desktop shortcut
+# Desktop shortcut popup
+desktop_popup_rect = pygame.Rect(250, 180, 500, 240)
+desktop_yes_button = pygame.Rect(305, 355, 160, 45)
+desktop_no_button = pygame.Rect(535, 355, 160, 45)
+
+#Save migration system definition
+def migrate_save(save_data):
+    save_version = save_data.get("game_version", "1.0")
+    if save_version == GAME_VERSION:
+        return save_data
+    print(f"Migrating save from {save_version} to {GAME_VERSION}")
+    # Future migrations go here
+    save_data["game_version"] = GAME_VERSION
+    return save_data
+
+#Create desktop shortcut function
+def create_desktop_shortcut():
+    if platform.system() != "Windows":
+        return
+    desktop = winshell.desktop()
+    shortcut_path = os.path.join(
+        desktop,
+        "Golden Garden.lnk"
+        )
+    if getattr(sys, "frozen", False):
+        target = sys.executable
+    else:
+        target = os.path.abspath(sys.argv[0])
+    working_directory = os.path.dirname(target)
+    shell = Dispatch("WScript.Shell")
+    shortcut = shell.CreateShortCut(shortcut_path)
+    shortcut.Targetpath = target
+    shortcut.WorkingDirectory = working_directory
+    shortcut.IconLocation = target + ",0"
+    shortcut.save()
+
 #---PLANT DICTIONARY---
 plants = {
 
@@ -664,6 +729,8 @@ def save_game():
         "shovels": shovels,
         "shovel_price": shovel_price,
         "first_launch": first_launch,
+        "game_version": GAME_VERSION,
+        "show_desktop_shortcut_prompt": show_desktop_shortcut_prompt,
 
         "slots": [],
         "tiles": []
@@ -691,10 +758,12 @@ def save_game():
         })
 
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxjsonxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    with open(save_file, "w") as file:
+    with open(save_file, "w") as file:     ################################
         json.dump(save_data, file)
+        save_data = migrate_save(save_data)
         
 def load_game():
+    print("load_game() called")
 
     global bloombits
     global selected_seed
@@ -703,7 +772,6 @@ def load_game():
     global first_launch
 
     try:
-
         with open(save_file, "r") as file:
             save_data = json.load(file)
         bloombits = save_data["bloombits"]
@@ -711,10 +779,15 @@ def load_game():
         shovels = save_data.get("shovels", 0)
         shovel_price = save_data.get("shovel_price", 15)
         first_launch = save_data.get("first_launch", True)
-
+        show_desktop_shortcut_prompt = save_data.get("show_desktop_shortcut_prompt", True)
+        save_version = save_data.get("game_version", "1.0.0")
+        if save_version != GAME_VERSION:
+            save_data = migrate_save(save_data)
+        if GAME_VERSION != save_version:
+            print("The save version differs from the game version.")
+            print("Migration may be required.")
         # Load slots
         for i in range(len(slots)):
-
             slots[i]["seed"] = save_data["slots"][i]["seed"]
             slots[i]["amount"] = save_data["slots"][i]["amount"]
 
@@ -726,8 +799,12 @@ def load_game():
             tiles[i]["planted"] = save_data["tiles"][i]["planted"]
                 # Reset timer safely
             tiles[i]["plant_time"] = pygame.time.get_ticks()
-    except:
-        print("No save file found")
+    except FileNotFoundError:
+        print("No save found. Creating a new one...")
+        save_game()
+    except Exception as e:
+        print(f"Error loading save: {e}")
+
         shovels = 0
         shovel_price = 15
         selected_tool = None
@@ -738,6 +815,12 @@ def load_game():
 
 # GAME LOOP-------------------------------------------------------------------------------------------
 load_game()
+if first_launch:
+    if platform.system() == "Windows":
+        show_desktop_popup = True
+    else:
+        show_desktop_popup = False
+
 while running:
     current_time = pygame.time.get_ticks()
     #Custom cursor handling (makes the normal one standard)
@@ -797,43 +880,62 @@ while running:
                     save_game()
 
                 continue
+            
+            #=========================
+            # DESKTOP SHORTCUT PROMPT
+            #=========================
+            if show_desktop_shortcut_prompt:
+                if desktop_yes_button.collidepoint(mouse_pos):
+                    print("YES clicked")
+                    create_desktop_shortcut()
+                    show_desktop_shortcut_prompt = False
+                    save_game()
+                elif desktop_no_button.collidepoint(mouse_pos):
+                    print("NO clicked")
+                    show_desktop_shortcut_prompt = False
+                    save_game()
+                continue
             # =========================
             # MENU
             # =========================
             if game_state == "menu":
-                # START/NEW GAME BUTTON
-                if start_button.collidepoint(mouse_pos):
-                    # RESET TILES
-                    for tile in tiles:
-                        tile["plant"] = None
-                        tile["growth_stage"] = 0
-                        tile["planted"] = False
-                        tile["plant_time"] = 0
-                    # RESET INVENTORY
-                    for slot in slots:
-                        slot["seed"] = None
-                        slot["amount"] = 0
-                        slot["selected"] = False
-                    slots[0]["selected"] = True
-                    add_seed_to_inventory("Daisy")
-                    selected_seed = "Daisy"
-                    game_state = "playing"
-                    #RESET BLOOMBITS
-                    bloombits = 0
-                    # RESET SHOVEL DATA
-                    shovels = 0
-                    shovel_price = 15
-                    selected_tool = None
+                if not show_desktop_shortcut_prompt:
+                    print(first_launch)
+                    # START/NEW GAME BUTTON
+                    if start_button.collidepoint(mouse_pos):
+                        # RESET TILES
+                        for tile in tiles:
+                            tile["plant"] = None
+                            tile["growth_stage"] = 0
+                            tile["planted"] = False
+                            tile["plant_time"] = 0
+                        # RESET INVENTORY
+                        for slot in slots:
+                            slot["seed"] = None
+                            slot["amount"] = 0
+                            slot["selected"] = False
+                        slots[0]["selected"] = True
+                        add_seed_to_inventory("Daisy")
+                        selected_seed = "Daisy"
+                        game_state = "playing"
+                        #RESET BLOOMBITS
+                        bloombits = 0
+                        # RESET SHOVEL DATA
+                        shovels = 0
+                        shovel_price = 15
+                        selected_tool = None
+                        if first_launch:
+                            show_welcome_popup = True
 
-                # CONTINUE
-                elif continue_button.collidepoint(mouse_pos):
-                    load_game()
-                    game_state = "playing"
+                    # CONTINUE
+                    elif continue_button.collidepoint(mouse_pos):
+                        load_game()
+                        game_state = "playing"
 
-                # EXIT BUTTON
-                elif exit_button.collidepoint(mouse_pos):
-                    pygame.quit()
-                    sys.exit()
+                    # EXIT BUTTON
+                    elif exit_button.collidepoint(mouse_pos):
+                        pygame.quit()
+                        sys.exit()
 
             # =========================
             # GAMEPLAY
@@ -983,16 +1085,24 @@ while running:
 
             elif growth_time >= plant_data["grow_stage_2"]:
                 tile["growth_stage"] = 2
+    
+    # -------------------------
+    # FIRST LAUNCH DESKTOP POPUP
+    # -------------------------
+    if show_desktop_shortcut_prompt:
+        # Don't draw the menu yet
+        screen.fill((50, 120, 50))
+
     #Game state rendering
     if game_state == "menu":
         screen.fill((50, 120, 50))
         title_font = pygame.font.SysFont(None, 100)
         title_text = title_font.render(
-            "GOLDEN GARDEN - v1.0",
+            "GOLDEN GARDEN-v1.0.2-beta",
             True,
             (255, 255, 255)
         )
-        screen.blit(title_text, (100, 120))
+        screen.blit(title_text, (0, 120))
         # Draw buttons
         pygame.draw.rect(screen, (220, 220, 220), start_button)
         pygame.draw.rect(screen, (220, 220, 220), continue_button)
@@ -1030,7 +1140,7 @@ while running:
         # CREDITS
         credits_font = pygame.font.SysFont(None, 20)
         credits_text = credits_font.render(
-            "Golden Garden v1.0.2-alpha | Made with <3 by Saraa_",
+            "Golden Garden v1.0.2-beta | Made with <3 by Saraa_",
             True,
             (255,255,255)
         )
@@ -1325,10 +1435,7 @@ while running:
             # Delete expired text
             if text["timer"] <= 0:
                 floating_texts.remove(text)
-        
-        #First launch welcome popup
-        if first_launch:
-            show_welcome_popup = True
+    
         # ================================
         #  RETURN TO MENU POPUP DRAWING
         # ================================
@@ -1433,6 +1540,66 @@ while running:
 
         screen.blit(popup_surface, popup_rect.topleft)
 
+    # =========================
+    # DESKTOP SHORTCUT POPUP
+    # =========================
+    print("Drawing check:", show_desktop_shortcut_prompt)
+    if show_desktop_shortcut_prompt:
+        print("Drawing desktop popup")
+        # Dark overlay
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.set_alpha(140)
+        overlay.fill((0, 0, 0))
+        screen.blit(overlay, (0, 0))
+        # Popup box
+        popup_rect = pygame.Rect(250, 180, 500, 240)
+        pygame.draw.rect(screen, (225, 255, 225), popup_rect)
+        pygame.draw.rect(screen, (90, 90, 90), popup_rect, 4)
+        # Title
+        title = font.render(
+            "Create Desktop Shortcut?",
+            True,
+            (0, 0, 0)
+        )
+        screen.blit(title, (305, 205))
+        # Text
+        line1 = slot_font.render(
+            "Would you like Golden Garden to create",
+            True,
+            (40, 40, 40)
+        )
+        screen.blit(line1, (295, 255))
+        line2 = slot_font.render(
+            "a shortcut on your desktop?",
+            True,
+            (40, 40, 40)
+        )
+        screen.blit(line2, (340, 282))
+        # YES button
+        pygame.draw.rect(screen, (80, 170, 80), desktop_yes_button)
+        pygame.draw.rect(screen, (40, 90, 40), desktop_yes_button, 3)
+        yes_text = slot_font.render(
+            "YES",
+            True,
+            (255,255,255)
+        )
+        screen.blit(
+            yes_text,
+            yes_text.get_rect(center=desktop_yes_button.center)
+        )
+        # NO button
+        pygame.draw.rect(screen, (180, 80, 80), desktop_no_button)
+        pygame.draw.rect(screen, (90, 40, 40), desktop_no_button, 3)
+        no_text = slot_font.render(
+            "NO",
+            True,
+            (255,255,255)
+        )
+        screen.blit(
+            no_text,
+            no_text.get_rect(center=desktop_no_button.center)
+        )
+
     # Custom cursor rendering (normal)
     mouse_pos = pygame.mouse.get_pos()
     if hovering_clickable:
@@ -1440,7 +1607,6 @@ while running:
     else:
         current_cursor = cursor_normal
     screen.blit(current_cursor, mouse_pos)
-
     pygame.display.flip()
     clock.tick(144)
 pygame.quit()
