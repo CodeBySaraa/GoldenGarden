@@ -31,9 +31,8 @@ def resource_path(relative_path):
     if getattr(sys, "frozen", False):
         base_path = sys._MEIPASS
     else:
-        base_path = os.path.abspath(".")
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
-
 #=========================
 # Window setup
 #=========================
@@ -418,6 +417,10 @@ shovel_image = pygame.transform.scale(
 #PNG custom cursor
 cursor_normal = pygame.image.load(resource_path("assets/cursors/cursor_normal.png")).convert_alpha()
 cursor_hand = pygame.image.load(resource_path("assets/cursors/cursor_hand.png")).convert_alpha()
+print(resource_path("assets/cursors/cursor_normal.png")) ###################
+print(os.path.exists(resource_path("assets/cursors/cursor_normal.png")))
+print(resource_path("assets/cursors/cursor_hand.png"))
+print(os.path.exists(resource_path("assets/cursors/cursor_hand.png")))
 
 # Background music
 pygame.mixer.music.load(
