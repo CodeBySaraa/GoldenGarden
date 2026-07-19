@@ -2,7 +2,7 @@
 
 A relaxing gardening game made with Python and Pygame.
 
->>> Features
+> Features
 
 - Plant and harvest flowers
 - Earn BloomBits
@@ -10,14 +10,16 @@ A relaxing gardening game made with Python and Pygame.
 - Save and load progress
 - Animated flowers
 - Inventory system
+- Optional first-launch shortcut creation
+- Cross-versioning compatibility
 
->>> Controls
+> Controls
 
 - Left Click = Interact
 - E = Open Store
 - ESC = Return to Menu
 
->>> Roadmap
+> Roadmap
 
     --> v1.1 Scientific Bloom Update
 	- Flower encyclopedia
@@ -39,4 +41,4 @@ A relaxing gardening game made with Python and Pygame.
 
 Enjoy the game!
 
-Golden Garden v1.0.1 | Made with <3 by Saraa_
+Golden Garden | Made with <3 by Saraa_
