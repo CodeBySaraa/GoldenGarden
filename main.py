@@ -3,19 +3,11 @@ import sys
 import json
 import random
 import os
-import platform
+import winshell
+from win32com.client import Dispatch
 
 pygame.init()
 pygame.mixer.init()
-
-#OS detection
-IS_WINDOWS = platform.system() == "Windows"
-IS_LINUX = platform.system() == "Linux"
-IS_MAC = platform.system() == "Darwin"
-#Platgorm-specific imports for Windows
-if platform.system() == "Windows":
-    import winshell
-    from win32com.client import Dispatch
 
 #Hide Windows cursor
 pygame.mouse.set_visible(False)
@@ -417,10 +409,6 @@ shovel_image = pygame.transform.scale(
 #PNG custom cursor
 cursor_normal = pygame.image.load(resource_path("assets/cursors/cursor_normal.png")).convert_alpha()
 cursor_hand = pygame.image.load(resource_path("assets/cursors/cursor_hand.png")).convert_alpha()
-print(resource_path("assets/cursors/cursor_normal.png")) ###################
-print(os.path.exists(resource_path("assets/cursors/cursor_normal.png")))
-print(resource_path("assets/cursors/cursor_hand.png"))
-print(os.path.exists(resource_path("assets/cursors/cursor_hand.png")))
 
 # Background music
 pygame.mixer.music.load(
@@ -542,6 +530,7 @@ def add_seed_to_inventory(seed_name):
         "timer": 20
     })
     return False
+
 #=====================
 # Overall variables
 #=====================
@@ -597,8 +586,6 @@ def migrate_save(save_data):
 
 #Create desktop shortcut function
 def create_desktop_shortcut():
-    if platform.system() != "Windows":
-        return
     desktop = winshell.desktop()
     shortcut_path = os.path.join(
         desktop,
@@ -819,10 +806,7 @@ def load_game():
 # GAME LOOP-------------------------------------------------------------------------------------------
 load_game()
 if first_launch:
-    if platform.system() == "Windows":
-        show_desktop_popup = True
-    else:
-        show_desktop_popup = False
+    show_desktop_shortcut_prompt = True
 
 while running:
     current_time = pygame.time.get_ticks()
