@@ -13,13 +13,13 @@ A relaxing gardening game made with Python and Pygame.
 - Optional first-launch shortcut creation
 - Cross-versioning compatibility
 
->>> Controls
+> Controls
 
 - Left Click = Interact
 - E = Open Store
 - ESC = Return to Menu
 
->>> Roadmap
+> Roadmap
 
     --> v1.1 Scientific Bloom Update
 	- Flower encyclopedia
