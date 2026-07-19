@@ -39,7 +39,7 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pip install pyinstaller
 
-      - run: pyinstaller --onefile --windowed --add-data "assets:assets" main.py
+      - run: pyinstaller --onefile --windowed --add-data "assets:assets" --icon assets/icons/icon.png main.py
       - run: ls -R dist
 
       - uses: actions/upload-artifact@v4
