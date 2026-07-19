@@ -2,7 +2,7 @@
 
 A relaxing gardening game made with Python and Pygame.
 
->>> Features
+> Features
 
 - Plant and harvest flowers
 - Earn BloomBits
@@ -10,6 +10,8 @@ A relaxing gardening game made with Python and Pygame.
 - Save and load progress
 - Animated flowers
 - Inventory system
+- Optional first-launch shortcut creation
+- Cross-versioning compatibility
 
 >>> Controls
 
