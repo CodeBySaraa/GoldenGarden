@@ -17,6 +17,7 @@ jobs:
 
       - run: pip install -r requirements.txt
       - run: pip install pyinstaller
+      - run: pip install pillow
 
       - run: pyinstaller --onefile --windowed --name "Golden Garden" --add-data "assets;assets" --icon=assets/icons/icon.ico main.py
       - run: dir dist /s
