@@ -20,7 +20,6 @@ jobs:
       - run: pip install pillow
 
       - run: pyinstaller --onefile --windowed --name "Golden Garden" --add-data "assets;assets" --icon=assets/icons/icon.ico main.py
-      - run: dir dist /s
 
       - uses: actions/upload-artifact@v4
         with:
