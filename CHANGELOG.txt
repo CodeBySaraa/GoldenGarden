@@ -1,6 +1,6 @@
-Changelog:
+Changelog
 
-v1.0.1-pre1
+  v1.0.1 - The Gardener's Patch
 
      >>> Added
 	- Shovel tool
@@ -9,46 +9,8 @@ v1.0.1-pre1
 	- Shovel sound effects
 
      >>> Improved
-    - UI for tools
+- UI for tools
 	- Save system
 
      >>> Fixed
 	- Various inventory and floating text bugs
-
-v1.0.1 - The Welcome Update
-
-     >>> Added
-	- A welcome popup the very first time you open the game
-    - Added a nice fade-in to the welcome popup
-
-     >>> Improved
-    - Overall game UI
-
-     >>> Fixed
-    - Some shovel bugs
-
-v1.0.2-alpha
-
-     >>> Added
-    - A custom cursor that changes colours when you hover over something clickable
-    - A game icon
-    - New parameter that makes the clickable buttons highlight when hovered over
-
-     >>> Improved
-    - The game feel
-    - Code structure
-
-     >>> Fixed
-    - Abundant bugs from the game itself and compilation
-
-v1.0.2-beta
-
-     >>> Added
-    - A popup as you first launch the game that asks if you want to create a desktop shortcut (Windows-only feature for now)
-
-     >>> Improved
-    - Save-game system
-    - Cross-version compatibility
-
-     >>> Fixed
-    - Many bugs from the features added in this version and the previous one (v1.0.2-alpha)

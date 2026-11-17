@@ -1,4 +1,1 @@
 pygame
-pyinstaller
-pywin32
-winshell

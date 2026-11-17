@@ -5,6 +5,10 @@ import random
 import os
 import winshell
 from win32com.client import Dispatch
+#---------
+from flowerdictionary import plants
+from buyables import buyables
+from assets import resource_path, load_assets
 
 pygame.init()
 pygame.mixer.init()
@@ -16,15 +20,7 @@ pygame.mouse.set_visible(False)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
-#==========================
-# Directories adapter
-#==========================
-def resource_path(relative_path):
-    if getattr(sys, "frozen", False):
-        base_path = sys._MEIPASS
-    else:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, relative_path)
+
 #=========================
 # Window setup
 #=========================
@@ -45,6 +41,8 @@ continue_button = pygame.Rect(350, 360, 300, 70)
 exit_button = pygame.Rect(350, 460, 300, 70)
 #Internal version tracking constant
 GAME_VERSION = "1.0.2-beta"
+#Assets loading
+assets = load_assets()
 
 #Desktop shortcut creation and pointing
 if getattr(sys, "frozen", False):
@@ -52,393 +50,25 @@ if getattr(sys, "frozen", False):
 else:
     target = os.path.abspath(sys.argv[0])
 
-#PNG randomisation of garden layout
-grass_tiles = [
-    pygame.image.load(resource_path("assets/tiles/grass_normal/gt1.png")),
-    pygame.image.load(resource_path("assets/tiles/grass_normal/gt2.png")),
-    pygame.image.load(resource_path("assets/tiles/grass_normal/gt3.png")),
-    pygame.image.load(resource_path("assets/tiles/grass_normal/gt4.png"))
-]
-
-#PNG animation for water layout
-water_frames = [
-    pygame.image.load(resource_path("assets/tiles/water/w1.png")),
-    pygame.image.load(resource_path("assets/tiles/water/w2.png")),
-    pygame.image.load(resource_path("assets/tiles/water/w3.png"))
-]
+#Animation variables for water tiles
 water_frame_index = 0
 last_water_update = 0
 water_animation_speed = 500
-
-#PNG randomisation of background layout
-background_tiles = [
-    pygame.image.load(resource_path("assets/tiles/background/bg1.png")),
-    pygame.image.load(resource_path("assets/tiles/background/bg2.png")),
-    pygame.image.load(resource_path("assets/tiles/background/bg3.png"))
-]
-
-#PNG randomisation for boosted tile layout
-boosted_tiles = [
-    pygame.image.load(resource_path("assets/tiles/grass_boosted/gb1.png")),
-    pygame.image.load(resource_path("assets/tiles/grass_boosted/gb2.png"))
-]
-
-#PNG plants
-plant_images = {
-
-    "Daisy": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/daisy/daisy_slotview/daisy_slotview.png")
-        ).convert_alpha(),
-        1: [
-            pygame.image.load(
-               resource_path("assets/plants/daisy/daisy_stage1/daisy-1-1.png")
-            ).convert_alpha(),
-            pygame.image.load(
-                resource_path("assets/plants/daisy/daisy_stage1/daisy-1-2.png")
-            ).convert_alpha()
-        ],
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/daisy/daisy_stage2/daisy-2-1.png")
-            ).convert_alpha(),
-            pygame.image.load(
-                resource_path("assets/plants/daisy/daisy_stage2/daisy-2-2.png")
-            ).convert_alpha()
-        ],
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/daisy/daisy_stage3/daisy-3-1.png")
-            ).convert_alpha(),
-            pygame.image.load(
-                resource_path("assets/plants/daisy/daisy_stage3/daisy-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Tulip": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/tulip/tulip_slotview/tulip_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage1/tulip-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage1/tulip-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage2/tulip-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage2/tulip-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage3/tulip-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/tulip/tulip_stage3/tulip-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Sunflower": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/sunflower/sunflower_slotview/sunflower_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage1/sunflower-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage1/sunflower-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage2/sunflower-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage2/sunflower-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage3/sunflower-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/sunflower/sunflower_stage3/sunflower-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Rose": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/rose/rose_slotview/rose_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage1/rose-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage1/rose-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage2/rose-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage2/rose-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage3/rose-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/rose/rose_stage3/rose-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Lavender": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/lavender/lavender_slotview/lavender_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage1/lavender-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage1/lavender-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage2/lavender-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage2/lavender-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage3/lavender-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/lavender/lavender_stage3/lavender-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Blue Orchid": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/blueorchid/blueorchid_slotview/blueorchid_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage1/blueorchid-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage1/blueorchid-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage2/blueorchid-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage2/blueorchid-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage3/blueorchid-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/blueorchid/blueorchid_stage3/blueorchid-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Cherry Blossom": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/cherryblossom/cherryblossom_slotview/cherryblossom_slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage1/cherryblossom-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage1/cherryblossom-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage2/cherryblossom-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage2/cherryblossom-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage3/cherryblossom-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/cherryblossom/cherryblossom_stage3/cherryblossom-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Golden Lily": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/goldenlily/goldenlily_slotview/goldenlily-slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage1/goldenlily-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage1/goldenlily-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage2/goldenlily-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage2/goldenlily-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage3/goldenlily-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/goldenlily/goldenlily_stage3/goldenlily-3-2.png")
-            ).convert_alpha()
-        ]
-    },
-    "Moon Blossom": {
-        "slot": pygame.image.load(
-            resource_path("assets/plants/moonblossom/moonblossom_slotview/moonblossom-slotview.png")
-        ).convert_alpha(),
-
-        1: [
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage1/moonblossom-1-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage1/moonblossom-1-2.png")
-            ).convert_alpha()
-        ],
-
-        2: [
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage2/moonblossom-2-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage2/moonblossom-2-2.png")
-            ).convert_alpha()
-        ],
-
-        3: [
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage3/moonblossom-3-1.png")
-            ).convert_alpha(),
-
-            pygame.image.load(
-                resource_path("assets/plants/moonblossom/moonblossom_stage3/moonblossom-3-2.png")
-            ).convert_alpha()
-        ]
-    }
-}
-
-#PNG buyables
-shovel_image = pygame.image.load(
-    resource_path("assets/buyables/objects/shovel.png")
-).convert_alpha()
-shovel_image = pygame.transform.scale(
-    shovel_image,
-    (40, 40)
-)
 
 #PNG custom cursor
 cursor_normal = pygame.image.load(resource_path("assets/cursors/cursor_normal.png")).convert_alpha()
 cursor_hand = pygame.image.load(resource_path("assets/cursors/cursor_hand.png")).convert_alpha()
 
-# Background music
-pygame.mixer.music.load(
-    resource_path("assets/sounds/background_music.ogg")
-)
+# Background music setup
 pygame.mixer.music.set_volume(0.4)
 pygame.mixer.music.play(-1)  # -1 = infinite loop
 
-# Sound effects
-buy_sound = pygame.mixer.Sound(
-    resource_path("assets/sounds/buy.ogg")
-)
-earn_sound = pygame.mixer.Sound(
-    resource_path("assets/sounds/earn.ogg")
-)
-
-harvest_sound = pygame.mixer.Sound(
-    resource_path("assets/sounds/harvest.ogg")
-)
-plant_sound = pygame.mixer.Sound(
-    resource_path("assets/sounds/plant.ogg")
-)
-shovel_sound = pygame.mixer.Sound(
-    resource_path("assets/sounds/shovel.ogg")
-)
-buy_sound.set_volume(0.5)
-earn_sound.set_volume(0.4)
-harvest_sound.set_volume(0.4)
-plant_sound.set_volume(0.4)
-shovel_sound.set_volume(0.4)
+# Sound effects volume
+assets['sounds']['buy_sound'].set_volume(0.5)
+assets['sounds']['earn_sound'].set_volume(0.4)
+assets['sounds']['harvest_sound'].set_volume(0.4)
+assets['sounds']['plant_sound'].set_volume(0.4)
+assets['sounds']['shovel_sound'].set_volume(0.4)
 
 #PNG BloomBit icon for UI
 bloombit_image = pygame.image.load(
@@ -465,7 +95,7 @@ for x in range(0, WIDTH, background_tile_size):
                 background_tile_size
             ),
             "image": random.choices(
-                background_tiles,
+                assets['background_tiles'],
                 weights=[2, 3, 10]
             )[0]
         })
@@ -474,9 +104,8 @@ for x in range(garden_rect.left, garden_rect.right, tile_size):
         rect = pygame.Rect(x, y, tile_size, tile_size)
         tiles.append({
             "rect": rect,
-            "grass_image": random.choice(grass_tiles),
-            "boosted_image": random.choice(boosted_tiles),
-                        
+            "grass_image": random.choice(assets['grass_tiles']),
+            "boosted_image": random.choice(assets['boosted_tiles']),
             "planted": False,
             "special": False,
             "boosted": False,
@@ -579,7 +208,7 @@ def migrate_save(save_data):
     save_version = save_data.get("game_version", "1.0")
     if save_version == GAME_VERSION:
         return save_data
-    print(f"Migrating save from {save_version} to {GAME_VERSION}")
+    #print(f"Migrating save from {save_version} to {GAME_VERSION}")
     # Future migrations go here
     save_data["game_version"] = GAME_VERSION
     return save_data
@@ -603,117 +232,9 @@ def create_desktop_shortcut():
     shortcut.IconLocation = target + ",0"
     shortcut.save()
 
-#---PLANT DICTIONARY---
-plants = {
-
-    "Daisy": {
-        "buy_price": 2,
-        "sell_price": 3,
-        "grow_stage_2": 5000,
-        "grow_stage_3": 10000,
-        "slot_colour": (255, 255, 0),
-        "stage_1_colour": (255, 0, 0),
-        "stage_2_colour": (255, 255, 0),
-        "stage_3_colour": (0, 255, 0)
-    },
-    
-    "Tulip": {
-        "buy_price": 5,
-        "sell_price": 7,
-        "grow_stage_2": 7000,
-        "grow_stage_3": 14000,
-        "slot_colour": (255, 255, 0),
-        "stage_1_colour": (200, 25, 47),
-        "stage_2_colour": (253, 255, 0),
-        "stage_3_colour": (0, 255, 10)
-    },
-
-    "Sunflower": {
-        "buy_price": 12,
-        "sell_price": 18,
-        "grow_stage_2": 9000,
-        "grow_stage_3": 18000,
-        "slot_colour": (0, 100, 255),
-        "stage_1_colour": (0, 100, 255),
-        "stage_2_colour": (140, 20, 240),
-        "stage_3_colour": (255, 105, 180)
-    },
-
-    "Rose": {
-        "buy_price": 35,
-        "sell_price": 50,
-        "grow_stage_2": 14000,
-        "grow_stage_3": 25000,
-        "slot_colour": (220, 20, 60),
-        "stage_1_colour": (150, 0, 30),
-        "stage_2_colour": (220, 20, 60),
-        "stage_3_colour": (255, 100, 150)
-    },
-
-    "Lavender": {
-        "buy_price": 80,
-        "sell_price": 120,
-        "grow_stage_2": 18000,
-        "grow_stage_3": 35000,
-        "slot_colour": (170, 100, 255),
-        "stage_1_colour": (100, 50, 180),
-        "stage_2_colour": (170, 100, 255),
-        "stage_3_colour": (220, 180, 255)
-    },
-    "Blue Orchid": {
-        "buy_price": 150,
-        "sell_price": 220,
-        "grow_stage_2": 22000,
-        "grow_stage_3": 40000,
-        "slot_colour": (220, 20, 60),
-        "stage_1_colour": (150, 0, 30),
-        "stage_2_colour": (220, 20, 60),
-        "stage_3_colour": (255, 100, 150)
-    },
-    "Cherry Blossom": {
-        "buy_price": 350,
-        "sell_price": 500,
-        "grow_stage_2": 27000,
-        "grow_stage_3": 47000,
-        "slot_colour": (220, 20, 60),
-        "stage_1_colour": (150, 0, 30),
-        "stage_2_colour": (220, 20, 60),
-        "stage_3_colour": (255, 100, 150)
-    },
-    "Golden Lily": {
-        "buy_price": 900,
-        "sell_price": 1400,
-        "grow_stage_2": 34000,
-        "grow_stage_3": 52000,
-        "slot_colour": (220, 20, 60),
-        "stage_1_colour": (150, 0, 30),
-        "stage_2_colour": (220, 20, 60),
-        "stage_3_colour": (255, 100, 150)
-    },
-    "Moon Blossom": {
-        "buy_price": 2500,
-        "sell_price": 4000,
-        "grow_stage_2": 38000,
-        "grow_stage_3": 60000,
-        "slot_colour": (220, 20, 60),
-        "stage_1_colour": (150, 0, 30),
-        "stage_2_colour": (220, 20, 60),
-        "stage_3_colour": (255, 100, 150)
-    }
-}
-
-#---BUYABLES DICTIONARY---
-buyables = {
-    "Shovel": {
-        "price": shovel_price,
-        "image": shovel_image
-    }
-}
-
 def save_game():
 
     save_data = {
-
         "bloombits": bloombits,
         "selected_seed": selected_seed,
         "shovels": shovels,
@@ -724,12 +245,10 @@ def save_game():
 
         "slots": [],
         "tiles": []
-
     }
 
     # Save slots
     for slot in slots:
-
         save_data["slots"].append({
             "seed": slot["seed"],
             "amount": slot["amount"]
@@ -737,9 +256,7 @@ def save_game():
 
     # Save tiles
     for tile in tiles:
-
         save_data["tiles"].append({
-
             "plant": tile["plant"],
             "growth_stage": tile["growth_stage"],
             "plant_time": tile["plant_time"],
@@ -748,12 +265,12 @@ def save_game():
         })
 
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxjsonxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    with open(save_file, "w") as file:     ################################
+    with open(save_file, "w") as file:
         json.dump(save_data, file)
         save_data = migrate_save(save_data)
         
 def load_game():
-    print("load_game() called")
+    #print("load_game() called")
 
     global bloombits
     global selected_seed
@@ -774,8 +291,9 @@ def load_game():
         if save_version != GAME_VERSION:
             save_data = migrate_save(save_data)
         if GAME_VERSION != save_version:
-            print("The save version differs from the game version.")
-            print("Migration may be required.")
+            #print("The save version differs from the game version.")
+            #print("Migration may be required.")
+            pass
         # Load slots
         for i in range(len(slots)):
             slots[i]["seed"] = save_data["slots"][i]["seed"]
@@ -790,10 +308,11 @@ def load_game():
                 # Reset timer safely
             tiles[i]["plant_time"] = pygame.time.get_ticks()
     except FileNotFoundError:
-        print("No save found. Creating a new one...")
+        #print("No save found. Creating a new one...")
         save_game()
     except Exception as e:
-        print(f"Error loading save: {e}")
+        #print(f"Error loading save: {e}")
+        pass
 
         shovels = 0
         shovel_price = 15
@@ -818,7 +337,7 @@ while running:
     if current_time - last_water_update > water_animation_speed:
         water_frame_index += 1
 
-        if water_frame_index >= len(water_frames):
+        if water_frame_index >= len(assets['water_frames']):
             water_frame_index = 0
 
         last_water_update = current_time
@@ -873,12 +392,12 @@ while running:
             #=========================
             if show_desktop_shortcut_prompt:
                 if desktop_yes_button.collidepoint(mouse_pos):
-                    print("YES clicked")
+                    #print("YES clicked")
                     create_desktop_shortcut()
                     show_desktop_shortcut_prompt = False
                     save_game()
                 elif desktop_no_button.collidepoint(mouse_pos):
-                    print("NO clicked")
+                    #print("NO clicked")
                     show_desktop_shortcut_prompt = False
                     save_game()
                 continue
@@ -887,7 +406,7 @@ while running:
             # =========================
             if game_state == "menu":
                 if not show_desktop_shortcut_prompt:
-                    print(first_launch)
+                    #print(first_launch)
                     # START/NEW GAME BUTTON
                     if start_button.collidepoint(mouse_pos):
                         # RESET TILES
@@ -948,12 +467,12 @@ while running:
                                     bloombits -= shovel_price
                                     shovels += 1
                                     shovel_price += 5
-                                    buy_sound.play()
+                                    assets['buy_sound'].play()
                             else:
                                 if bloombits >= plants[item]["buy_price"]:
                                     if add_seed_to_inventory(item):
                                         bloombits -= plants[item]["buy_price"]
-                                        buy_sound.play()
+                                        assets['sounds']['buy_sound'].play()
                 else:
                     # SLOT CLICKING
                     for slot in slots:
@@ -986,7 +505,7 @@ while running:
                                             "colour": (120,255,120),
                                             "timer": 13
                                         })
-                                    shovel_sound.play()
+                                    assets['sounds']['shovel_sound'].play()
                                     #Floating text for refund reward '+ x BloomBits'
                                     floating_texts.append({
                                         "text": f"+{refund} BloomBits",
@@ -1019,8 +538,8 @@ while running:
                                     "colour": (255, 215, 0),
                                     "timer": 13
                                 })
-                                harvest_sound.play()
-                                earn_sound.play()
+                                assets['sounds']['harvest_sound'].play()
+                                assets['sounds']['earn_sound'].play()
                             # PLANT
                             elif not tile["planted"] and not tile["special"]:
                                 if selected_seed is not None and selected_tool is None:
@@ -1032,7 +551,7 @@ while running:
                                                 tile["growth_stage"] = 1
                                                 tile["plant_time"] = pygame.time.get_ticks()
                                                 slot["amount"] -= 1
-                                                plant_sound.play()
+                                                assets['sounds']['plant_sound'].play()
                                                 if slot["amount"] <= 0:
                                                     slot["seed"] = None
                                                     slot["selected"] = False
@@ -1043,7 +562,7 @@ while running:
                     if bloombits >= shovel_price:
                         bloombits -= shovel_price
                         shovels = 1
-                        buy_sound.play()
+                        assets['buy_sound'].play()
                         shovel_price = int(shovel_price * 1.2)
                 else:
                     if selected_tool == "shovel":
@@ -1158,7 +677,7 @@ while running:
             if tile["boosted"]:
                 colour = (85, 107, 47)
             if tile["special"]: #Boosted tile rendering
-                screen.blit(water_frames[water_frame_index], tile["rect"])
+                screen.blit(assets['water_frames'][water_frame_index], tile["rect"])
             elif tile["boosted"]:
                 screen.blit(tile["boosted_image"], tile["rect"])
             else:
@@ -1166,7 +685,7 @@ while running:
             pygame.draw.rect(screen, (0, 0, 0), tile["rect"], 1)
             tile["boosted"] = False
             if tile["plant"] is not None:
-                plant_image = plant_images[tile["plant"]][tile["growth_stage"]][plant_animation_frame]
+                plant_image = assets['plant_images'][tile["plant"]][tile["growth_stage"]][plant_animation_frame]
                 screen.blit(
                     plant_image,
                     (tile["rect"].x + 5, tile["rect"].y + 5)
@@ -1247,7 +766,7 @@ while running:
             # Seed placeholder and stack amount rendering
             if slot["amount"] > 0:
                 if slot["amount"] > 0:
-                    seed_image = plant_images[slot["seed"]]["slot"]
+                    seed_image = assets['plant_images'][slot["seed"]]["slot"]
                     screen.blit(
                         seed_image,
                         (slot["rect"].x + 10, slot["rect"].y + 10)
@@ -1276,7 +795,7 @@ while running:
             shovel_colour = (180,180,180)
         pygame.draw.rect(screen, shovel_colour, shovel_slot)
         if shovels > 0:
-            screen.blit(shovel_image, (27,100))
+            screen.blit(assets['shovel_image'], (27,100))
         else: #If no shovels, display a plus sign to indicate purchase
             plus_text = slot_font.render("+", True, (255,255,255))
             screen.blit(plus_text, (47,110))
@@ -1530,9 +1049,9 @@ while running:
     # =========================
     # DESKTOP SHORTCUT POPUP
     # =========================
-    print("Drawing check:", show_desktop_shortcut_prompt)
-    if show_desktop_shortcut_prompt:
-        print("Drawing desktop popup")
+    #print("Drawing check:", show_desktop_shortcut_prompt)
+    #if show_desktop_shortcut_prompt:
+        #print("Drawing desktop popup")
         # Dark overlay
         overlay = pygame.Surface((WIDTH, HEIGHT))
         overlay.set_alpha(140)
